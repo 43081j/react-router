@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import fse from "fs-extra";
 import stripAnsi from "strip-ansi";
-import execa from "execa";
+import { x } from "tinyexec";
 import arg from "arg";
 import * as semver from "semver";
 import sortPackageJSON from "sort-package-json";
@@ -469,12 +469,12 @@ async function gitInitStep(ctx: Context) {
     start: "Git initializing...",
     end: "Git initialized",
     while: async () => {
-      let options = { cwd: ctx.cwd, stdio: "ignore" } as const;
+      let options = { nodeOptions: { cwd: ctx.cwd, stdio: "ignore" } } as const;
       let commitMsg = "Initial commit from create-react-router";
       try {
-        await execa("git", ["init"], options);
-        await execa("git", ["add", "."], options);
-        await execa("git", ["commit", "-m", commitMsg], options);
+        await x("git", ["init"], options);
+        await x("git", ["add", "."], options);
+        await x("git", ["commit", "-m", commitMsg], options);
       } catch (err) {
         error("Oh no!", "Failed to initialize git.");
         throw err;
@@ -538,9 +538,8 @@ async function installDependencies({
   showInstallOutput: boolean;
 }) {
   try {
-    await execa(pkgManager, ["install"], {
-      cwd,
-      stdio: showInstallOutput ? "inherit" : "ignore",
+    await x(pkgManager, ["install"], {
+      nodeOptions: { cwd, stdio: showInstallOutput ? "inherit" : "ignore" },
     });
   } catch (err) {
     error("Oh no!", "Failed to install dependencies.");

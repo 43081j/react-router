@@ -15,7 +15,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterAll(() => server.close());
 
 // this is so we can mock "npm install" etc. in a cross-platform way
-jest.mock("execa");
+jest.mock("tinyexec");
 
 const DOWN = "\x1B\x5B\x42";
 const ENTER = "\x0D";
@@ -496,8 +496,8 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("npm-install-default");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    let {x: tinyexec} = require("tinyexec");
+    tinyexec.mockImplementation(async () => {});
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -514,7 +514,7 @@ describe("create-react-router CLI", () => {
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(tinyexec).toHaveBeenCalledWith(
       "npm",
       expect.arrayContaining(["install"]),
       expect.anything()
@@ -530,8 +530,8 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("npm-install-on-unknown-package-manager");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    let {x: tinyexec} = require("tinyexec");
+    tinyexec.mockImplementation(async () => {});
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -548,7 +548,7 @@ describe("create-react-router CLI", () => {
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(tinyexec).toHaveBeenCalledWith(
       "npm",
       expect.arrayContaining(["install"]),
       expect.anything()
@@ -564,8 +564,8 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("npm-install-from-user-agent");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    let {x: tinyexec} = require("tinyexec");
+    tinyexec.mockImplementation(async () => {});
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -582,7 +582,7 @@ describe("create-react-router CLI", () => {
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(tinyexec).toHaveBeenCalledWith(
       "npm",
       expect.arrayContaining(["install"]),
       expect.anything()
@@ -597,8 +597,8 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("yarn-create-from-user-agent");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    let {x: tinyexec} = require("tinyexec");
+    tinyexec.mockImplementation(async () => {});
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -615,7 +615,7 @@ describe("create-react-router CLI", () => {
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(tinyexec).toHaveBeenCalledWith(
       "yarn",
       expect.arrayContaining(["install"]),
       expect.anything()
@@ -630,8 +630,8 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("pnpm-create-from-user-agent");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    let {x: tinyexec} = require("tinyexec");
+    tinyexec.mockImplementation(async () => {});
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -648,7 +648,7 @@ describe("create-react-router CLI", () => {
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(tinyexec).toHaveBeenCalledWith(
       "pnpm",
       expect.arrayContaining(["install"]),
       expect.anything()
@@ -663,8 +663,8 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("bun-create-from-user-agent");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    let {x: tinyexec} = require("tinyexec");
+    tinyexec.mockImplementation(async () => {});
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -681,7 +681,7 @@ describe("create-react-router CLI", () => {
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(tinyexec).toHaveBeenCalledWith(
       "bun",
       expect.arrayContaining(["install"]),
       expect.anything()
@@ -696,8 +696,8 @@ describe("create-react-router CLI", () => {
 
     let projectDir = getProjectDir("pnpm-create-override");
 
-    let execa = require("execa");
-    execa.mockImplementation(async () => {});
+    let {x: tinyexec} = require("tinyexec");
+    tinyexec.mockImplementation(async () => {});
 
     // Suppress terminal output
     let stdoutMock = jest
@@ -716,7 +716,7 @@ describe("create-react-router CLI", () => {
 
     stdoutMock.mockReset();
 
-    expect(execa).toHaveBeenCalledWith(
+    expect(tinyexec).toHaveBeenCalledWith(
       "pnpm",
       expect.arrayContaining(["install"]),
       expect.anything()
