@@ -5,7 +5,7 @@ import fs from "node:fs";
 import { type Key as ActionKey } from "node:readline";
 import { erase, cursor } from "sisteransi";
 import chalk from "chalk";
-import recursiveReaddir from "recursive-readdir";
+import { readdir } from "node:fs/promises";
 
 // https://no-color.org/
 const SUPPORTS_COLOR = chalk.supportsColor && !process.env.NO_COLOR;
@@ -292,14 +292,17 @@ export function stripDirectoryFromPath(dir: string, filePath: string) {
 export const IGNORED_TEMPLATE_DIRECTORIES = [".git", "node_modules"];
 
 export async function getDirectoryFilesRecursive(dir: string) {
-  let files = await recursiveReaddir(dir, [
-    (file) => {
+  let files = await readdir(dir, {
+    recursive: true
+  });
+
+  return files
+    .filter((file) => {
       let strippedFile = stripDirectoryFromPath(dir, file);
       let parts = strippedFile.split(path.sep);
       return (
         parts.length > 1 && IGNORED_TEMPLATE_DIRECTORIES.includes(parts[0])
       );
-    },
-  ]);
-  return files.map((f) => stripDirectoryFromPath(dir, f));
+    })
+    .map((f) => stripDirectoryFromPath(dir, f));
 }
