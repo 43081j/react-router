@@ -2,7 +2,7 @@ import process from "node:process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import fse from "fs-extra";
+import fsp from "node:fs/promises";
 import stripAnsi from "strip-ansi";
 import execa from "execa";
 import arg from "arg";
@@ -358,8 +358,8 @@ async function copyTempDirToAppDirStep(ctx: Context) {
     }
   }
 
-  await fse.copy(ctx.tempDir, ctx.cwd, {
-    filter(src, dest) {
+  await fsp.cp(ctx.tempDir, ctx.cwd, {
+    filter(src) {
       // We never copy .git/ or node_modules/ directories since it's highly
       // unlikely we want them copied - and because templates are primarily
       // being pulled from git tarballs which won't have .git/ and shouldn't

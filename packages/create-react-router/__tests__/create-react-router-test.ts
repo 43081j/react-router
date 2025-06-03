@@ -3,7 +3,8 @@ import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import fse from "fs-extra";
+import fs from "node:fs";
+import fsp from "node:fs/promises";
 import semver from "semver";
 import stripAnsi from "strip-ansi";
 
@@ -21,7 +22,7 @@ const DOWN = "\x1B\x5B\x42";
 const ENTER = "\x0D";
 
 const TEMP_DIR = path.join(
-  fse.realpathSync(tmpdir()),
+  fs.realpathSync(tmpdir()),
   `react-router-tests-${Math.random().toString(32).slice(2)}`
 );
 function maskTempDir(string: string) {
@@ -30,12 +31,12 @@ function maskTempDir(string: string) {
 
 jest.setTimeout(30_000);
 beforeAll(async () => {
-  await fse.remove(TEMP_DIR);
-  await fse.ensureDir(TEMP_DIR);
+  await fsp.rm(TEMP_DIR, { force: true, recursive: true });
+  await fsp.mkdir(TEMP_DIR, { recursive: true });
 });
 
 afterAll(async () => {
-  await fse.remove(TEMP_DIR);
+  await fsp.rm(TEMP_DIR, { force: true, recursive: true });
 });
 
 describe("create-react-router CLI", () => {
@@ -47,7 +48,7 @@ describe("create-react-router CLI", () => {
 
   afterEach(async () => {
     for (let dir of tempDirs) {
-      await fse.remove(dir);
+      await fsp.rm(dir, { force: true, recursive: true });
     }
     tempDirs = new Set<string>();
   });
@@ -146,8 +147,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("supports the --yes flag", async () => {
@@ -159,8 +160,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("errors when project directory isn't provided when shell isn't interactive", async () => {
@@ -175,8 +176,8 @@ describe("create-react-router CLI", () => {
       `"▲  Oh no! No project directory provided"`
     );
     expect(status).toBe(1);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeFalsy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeFalsy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
   });
 
   it("works for GitHub username/repo combo", async () => {
@@ -194,8 +195,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("works for GitHub username/repo/path combo", async () => {
@@ -213,8 +214,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("works for GitHub username/repo/path combo (when dots exist in folder)", async () => {
@@ -232,8 +233,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("fails for GitHub username/repo/path combo when path doesn't exist", async () => {
@@ -253,8 +254,8 @@ describe("create-react-router CLI", () => {
       `"▲  Oh no! The path "this/path/does/not/exist" was not found in this GitHub repo."`
     );
     expect(status).toBe(1);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeFalsy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeFalsy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
   });
 
   it("fails for private GitHub username/repo combo without a token", async () => {
@@ -293,8 +294,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("works for remote tarballs", async () => {
@@ -312,8 +313,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("fails for private github release tarballs", async () => {
@@ -352,8 +353,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("works for different branches and nested paths", async () => {
@@ -371,8 +372,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("fails for different branches and nested paths when path doesn't exist", async () => {
@@ -392,8 +393,8 @@ describe("create-react-router CLI", () => {
       `"▲  Oh no! The path "this/path/does/not/exist" was not found in this GitHub repo."`
     );
     expect(status).toBe(1);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeFalsy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeFalsy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
   });
 
   it("works for a path to a tarball on disk", async () => {
@@ -411,8 +412,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("works for a path to a tgz tarball on disk", async () => {
@@ -430,8 +431,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("works for a file URL to a tarball on disk", async () => {
@@ -451,7 +452,7 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
   });
 
   it("works for a file path to a directory on disk", async () => {
@@ -469,7 +470,7 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
   });
 
   it("works for a file URL to a directory on disk", async () => {
@@ -487,7 +488,7 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(projectDir, "package.json"))).toBeTruthy();
   });
 
   it("runs npm install by default", async () => {
@@ -726,7 +727,7 @@ describe("create-react-router CLI", () => {
 
   it("works when creating an app in the current dir", async () => {
     let emptyDir = getProjectDir("current-dir-if-empty");
-    fse.mkdirSync(emptyDir);
+    fs.mkdirSync(emptyDir);
 
     let { status, stderr } = await execCreateReactRouter({
       cwd: emptyDir,
@@ -741,8 +742,8 @@ describe("create-react-router CLI", () => {
 
     expect(stderr.trim()).toBeFalsy();
     expect(status).toBe(0);
-    expect(fse.existsSync(path.join(emptyDir, "package.json"))).toBeTruthy();
-    expect(fse.existsSync(path.join(emptyDir, "app/root.tsx"))).toBeTruthy();
+    expect(fs.existsSync(path.join(emptyDir, "package.json"))).toBeTruthy();
+    expect(fs.existsSync(path.join(emptyDir, "app/root.tsx"))).toBeTruthy();
   });
 
   it("does not copy .git nor node_modules directories if they exist in the template", async () => {
@@ -753,17 +754,19 @@ describe("create-react-router CLI", () => {
       "fixtures",
       "with-ignored-dir"
     );
-    fse.mkdirSync(path.join(templateWithIgnoredDirs, ".git"));
-    fse.createFileSync(
-      path.join(templateWithIgnoredDirs, ".git", "some-git-file.txt")
+    fs.mkdirSync(path.join(templateWithIgnoredDirs, ".git"));
+    fs.writeFileSync(
+      path.join(templateWithIgnoredDirs, ".git", "some-git-file.txt"),
+      ''
     );
-    fse.mkdirSync(path.join(templateWithIgnoredDirs, "node_modules"));
-    fse.createFileSync(
+    fs.mkdirSync(path.join(templateWithIgnoredDirs, "node_modules"));
+    fs.writeFileSync(
       path.join(
         templateWithIgnoredDirs,
         "node_modules",
         "some-node-module-file.txt"
-      )
+      ),
+      ''
     );
 
     let projectDir = getProjectDir("with-git-dir");
@@ -781,14 +784,14 @@ describe("create-react-router CLI", () => {
 
       expect(stderr.trim()).toBeFalsy();
       expect(status).toBe(0);
-      expect(fse.existsSync(path.join(projectDir, ".git"))).toBeFalsy();
-      expect(fse.existsSync(path.join(projectDir, "node_modules"))).toBeFalsy();
+      expect(fs.existsSync(path.join(projectDir, ".git"))).toBeFalsy();
+      expect(fs.existsSync(path.join(projectDir, "node_modules"))).toBeFalsy();
       expect(
-        fse.existsSync(path.join(projectDir, "package.json"))
+        fs.existsSync(path.join(projectDir, "package.json"))
       ).toBeTruthy();
     } finally {
-      fse.removeSync(path.join(templateWithIgnoredDirs, ".git"));
-      fse.removeSync(path.join(templateWithIgnoredDirs, "node_modules"));
+      fs.rmSync(path.join(templateWithIgnoredDirs, ".git"), { recursive: true, force: true });
+      fs.rmSync(path.join(templateWithIgnoredDirs, "node_modules"), { recursive: true, force: true });
     }
   });
 
@@ -808,7 +811,7 @@ describe("create-react-router CLI", () => {
     expect(status).toBe(0);
 
     let packageJsonPath = path.join(projectDir, "package.json");
-    let packageJson = JSON.parse(String(fse.readFileSync(packageJsonPath)));
+    let packageJson = JSON.parse(String(fs.readFileSync(packageJsonPath, 'utf8')));
     let dependencies = packageJson.dependencies;
 
     expect(dependencies).toMatchObject({
@@ -825,8 +828,8 @@ describe("create-react-router CLI", () => {
 
       it("works without prompt when there are no collisions", async () => {
         let projectDir = getProjectDir("not-empty-dir-interactive");
-        fse.mkdirSync(projectDir);
-        fse.createFileSync(path.join(projectDir, "some-file.txt"));
+        fs.mkdirSync(projectDir);
+        fs.writeFileSync(path.join(projectDir, "some-file.txt"), '');
 
         let { status, stderr } = await execCreateReactRouter({
           args: [
@@ -842,18 +845,18 @@ describe("create-react-router CLI", () => {
         expect(stderr.trim()).toBeFalsy();
         expect(status).toBe(0);
         expect(
-          fse.existsSync(path.join(projectDir, "package.json"))
+          fs.existsSync(path.join(projectDir, "package.json"))
         ).toBeTruthy();
         expect(
-          fse.existsSync(path.join(projectDir, "app/root.tsx"))
+          fs.existsSync(path.join(projectDir, "app/root.tsx"))
         ).toBeTruthy();
       });
 
       it("prompts for overwrite when there are collisions", async () => {
         let notEmptyDir = getProjectDir("not-empty-dir-interactive-collisions");
-        fse.mkdirSync(notEmptyDir);
-        fse.createFileSync(path.join(notEmptyDir, "package.json"));
-        fse.createFileSync(path.join(notEmptyDir, "tsconfig.json"));
+        fs.mkdirSync(notEmptyDir);
+        fs.writeFileSync(path.join(notEmptyDir, "package.json"), '');
+        fs.writeFileSync(path.join(notEmptyDir, "tsconfig.json"), '');
 
         let { status, stdout, stderr } = await execCreateReactRouter({
           args: [
@@ -878,13 +881,13 @@ describe("create-react-router CLI", () => {
         expect(status).toBe(0);
         expect(stderr.trim()).toBeFalsy();
         expect(
-          fse.existsSync(path.join(notEmptyDir, "package.json"))
+          fs.existsSync(path.join(notEmptyDir, "package.json"))
         ).toBeTruthy();
         expect(
-          fse.existsSync(path.join(notEmptyDir, "tsconfig.json"))
+          fs.existsSync(path.join(notEmptyDir, "tsconfig.json"))
         ).toBeTruthy();
         expect(
-          fse.existsSync(path.join(notEmptyDir, "app/root.tsx"))
+          fs.existsSync(path.join(notEmptyDir, "app/root.tsx"))
         ).toBeTruthy();
       });
 
@@ -892,9 +895,9 @@ describe("create-react-router CLI", () => {
         let projectDir = getProjectDir(
           "not-empty-dir-interactive-collisions-overwrite"
         );
-        fse.mkdirSync(projectDir);
-        fse.createFileSync(path.join(projectDir, "package.json"));
-        fse.createFileSync(path.join(projectDir, "tsconfig.json"));
+        fs.mkdirSync(projectDir);
+        fs.writeFileSync(path.join(projectDir, "package.json"), '');
+        fs.writeFileSync(path.join(projectDir, "tsconfig.json"), '');
 
         let { status, stdout, stderr } = await execCreateReactRouter({
           args: [
@@ -915,13 +918,13 @@ describe("create-react-router CLI", () => {
         expect(status).toBe(0);
         expect(stderr.trim()).toBeFalsy();
         expect(
-          fse.existsSync(path.join(projectDir, "package.json"))
+          fs.existsSync(path.join(projectDir, "package.json"))
         ).toBeTruthy();
         expect(
-          fse.existsSync(path.join(projectDir, "tsconfig.json"))
+          fs.existsSync(path.join(projectDir, "tsconfig.json"))
         ).toBeTruthy();
         expect(
-          fse.existsSync(path.join(projectDir, "app/root.tsx"))
+          fs.existsSync(path.join(projectDir, "app/root.tsx"))
         ).toBeTruthy();
       });
     });
@@ -931,8 +934,8 @@ describe("create-react-router CLI", () => {
 
       it("works when there are no collisions", async () => {
         let projectDir = getProjectDir("not-empty-dir-non-interactive");
-        fse.mkdirSync(projectDir);
-        fse.createFileSync(path.join(projectDir, "some-file.txt"));
+        fs.mkdirSync(projectDir);
+        fs.writeFileSync(path.join(projectDir, "some-file.txt"), '');
 
         let { status, stderr } = await execCreateReactRouter({
           args: [
@@ -948,10 +951,10 @@ describe("create-react-router CLI", () => {
         expect(stderr.trim()).toBeFalsy();
         expect(status).toBe(0);
         expect(
-          fse.existsSync(path.join(projectDir, "package.json"))
+          fs.existsSync(path.join(projectDir, "package.json"))
         ).toBeTruthy();
         expect(
-          fse.existsSync(path.join(projectDir, "app/root.tsx"))
+          fs.existsSync(path.join(projectDir, "app/root.tsx"))
         ).toBeTruthy();
       });
 
@@ -959,9 +962,9 @@ describe("create-react-router CLI", () => {
         let projectDir = getProjectDir(
           "not-empty-dir-non-interactive-collisions"
         );
-        fse.mkdirSync(projectDir);
-        fse.createFileSync(path.join(projectDir, "package.json"));
-        fse.createFileSync(path.join(projectDir, "tsconfig.json"));
+        fs.mkdirSync(projectDir);
+        fs.writeFileSync(path.join(projectDir, "package.json"), '');
+        fs.writeFileSync(path.join(projectDir, "tsconfig.json"), '');
 
         let { status, stderr } = await execCreateReactRouter({
           args: [
@@ -983,7 +986,7 @@ describe("create-react-router CLI", () => {
               `);
         expect(status).toBe(1);
         expect(
-          fse.existsSync(path.join(projectDir, "app/root.tsx"))
+          fs.existsSync(path.join(projectDir, "app/root.tsx"))
         ).toBeFalsy();
       });
 
@@ -991,9 +994,9 @@ describe("create-react-router CLI", () => {
         let projectDir = getProjectDir(
           "not-empty-dir-non-interactive-collisions-overwrite"
         );
-        fse.mkdirSync(projectDir);
-        fse.createFileSync(path.join(projectDir, "package.json"));
-        fse.createFileSync(path.join(projectDir, "tsconfig.json"));
+        fs.mkdirSync(projectDir);
+        fs.writeFileSync(path.join(projectDir, "package.json"), '');
+        fs.writeFileSync(path.join(projectDir, "tsconfig.json"), '');
 
         let { status, stdout, stderr } = await execCreateReactRouter({
           args: [
@@ -1015,13 +1018,13 @@ describe("create-react-router CLI", () => {
         expect(status).toBe(0);
         expect(stderr.trim()).toBeFalsy();
         expect(
-          fse.existsSync(path.join(projectDir, "package.json"))
+          fs.existsSync(path.join(projectDir, "package.json"))
         ).toBeTruthy();
         expect(
-          fse.existsSync(path.join(projectDir, "tsconfig.json"))
+          fs.existsSync(path.join(projectDir, "tsconfig.json"))
         ).toBeTruthy();
         expect(
-          fse.existsSync(path.join(projectDir, "app/root.tsx"))
+          fs.existsSync(path.join(projectDir, "app/root.tsx"))
         ).toBeTruthy();
       });
     });
