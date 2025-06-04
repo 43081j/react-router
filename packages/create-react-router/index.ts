@@ -8,9 +8,9 @@ import execa from "execa";
 import arg from "arg";
 import * as semver from "semver";
 import sortPackageJSON from "sort-package-json";
+import * as prompts from "@clack/prompts";
 
 import { version as thisReactRouterVersion } from "./package.json";
-import { prompt } from "./prompt";
 import {
   IGNORED_TEMPLATE_DIRECTORIES,
   color,
@@ -156,7 +156,6 @@ async function getContext(argv: string[]): Promise<Context> {
         (process.env.npm_config_user_agent ?? "npm").split("/")[0]
     ),
     projectName,
-    prompt,
     reactRouterVersion: selectedReactRouterVersion || thisReactRouterVersion,
     template,
     token,
@@ -178,7 +177,6 @@ interface Context {
   noMotion?: boolean;
   pkgManager: PackageManager;
   projectName?: string;
-  prompt: typeof prompt;
   reactRouterVersion: string;
   stdin?: typeof process.stdin;
   stdout?: typeof process.stdout;
@@ -205,6 +203,15 @@ async function introStep(ctx: Context) {
   }
 }
 
+async function promptOrExit<T>(promise: Promise<T | symbol>): Promise<T> {
+  const result = await promise;
+  if (prompts.isCancel(result)) {
+    process.exit(0);
+  }
+  return result;
+}
+
+
 async function projectNameStep(ctx: Context) {
   // valid cwd is required if shell isn't interactive
   if (!ctx.interactive && !ctx.cwd) {
@@ -222,13 +229,10 @@ async function projectNameStep(ctx: Context) {
   }
 
   if (!ctx.cwd) {
-    let { name } = await ctx.prompt({
-      name: "name",
-      type: "text",
-      label: title("dir"),
+    let name = await promptOrExit(prompts.text({
       message: "Where should we create your new project?",
-      initial: "./my-react-router-app",
-    });
+      placeholder: "./my-react-router-app",
+    }));
     ctx.cwd = name!;
     ctx.projectName = toValidProjectName(name!);
     return;
@@ -339,10 +343,7 @@ async function copyTempDirToAppDirStep(ctx: Context) {
         debug(`Colliding files:${getFileList("          ")}`);
       }
 
-      let { overwrite } = await ctx.prompt({
-        name: "overwrite",
-        type: "confirm",
-        label: title("overwrite"),
+      let overwrite = await promptOrExit(prompts.confirm({
         message:
           `Your project directory contains files that will be overwritten by\n` +
           `             this template (you can force with \`--overwrite\`)\n\n` +
@@ -350,8 +351,8 @@ async function copyTempDirToAppDirStep(ctx: Context) {
           `${getFileList("               ")}\n\n` +
           `             Do you wish to continue?\n` +
           `             `,
-        initial: false,
-      });
+        initialValue: false,
+      }));
       if (!overwrite) {
         throw new Error("Exiting to avoid overwriting files");
       }
@@ -359,7 +360,7 @@ async function copyTempDirToAppDirStep(ctx: Context) {
   }
 
   await fse.copy(ctx.tempDir, ctx.cwd, {
-    filter(src, dest) {
+    filter(src, _dest) {
       // We never copy .git/ or node_modules/ directories since it's highly
       // unlikely we want them copied - and because templates are primarily
       // being pulled from git tarballs which won't have .git/ and shouldn't
@@ -381,14 +382,10 @@ async function copyTempDirToAppDirStep(ctx: Context) {
 
 async function installDependenciesQuestionStep(ctx: Context) {
   if (ctx.install === undefined) {
-    let { deps = true } = await ctx.prompt({
-      name: "deps",
-      type: "confirm",
-      label: title("deps"),
+    let deps = await promptOrExit(prompts.confirm({
       message: `Install dependencies with ${ctx.pkgManager}?`,
-      hint: "recommended",
-      initial: true,
-    });
+      initialValue: true,
+    }));
     ctx.install = deps;
   }
 }
@@ -440,13 +437,9 @@ async function gitInitQuestionStep(ctx: Context) {
 
   let git = ctx.git;
   if (ctx.git === undefined) {
-    ({ git } = await ctx.prompt({
-      name: "git",
-      type: "confirm",
-      label: title("git"),
+    git = await promptOrExit(prompts.confirm({
       message: `Initialize a new git repository?`,
-      hint: "recommended",
-      initial: true,
+      initialValue: true,
     }));
   }
 
@@ -631,7 +624,7 @@ function title(text: string) {
   return align(color.bgWhite(` ${color.black(text)} `), "end", 7) + " ";
 }
 
-function printHelp(ctx: Context) {
+function printHelp(_ctx: Context) {
   // prettier-ignore
   let output = `
 ${title("create-react-router")}
